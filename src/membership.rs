@@ -5,40 +5,32 @@ use serde::{Deserialize, Serialize};
 use std::fmt;
 
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
+pub enum MembershipTarget {
+    Customer,
+    Reseller,
+    Affiliate,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub struct MembershipTier {
     pub name: String,
+    pub target: MembershipTarget,
     #[serde(skip_serializing_if = "Option::is_none")]
     pub description: Option<String>,
 }
 
 impl MembershipTier {
-    pub fn new(name: impl Into<String>) -> Self {
+    pub fn new(name: impl Into<String>, target: MembershipTarget) -> Self {
         Self {
             name: name.into(),
             description: None,
+            target,
         }
     }
 
     pub fn with_description(mut self, description: impl Into<String>) -> Self {
         self.description = Some(description.into());
         self
-    }
-
-    // Convenience methods for common tiers
-    pub fn basic() -> Self {
-        Self::new("Basic")
-    }
-
-    pub fn silver() -> Self {
-        Self::new("Silver")
-    }
-
-    pub fn gold() -> Self {
-        Self::new("Gold")
-    }
-
-    pub fn platinum() -> Self {
-        Self::new("Platinum")
     }
 }
 
@@ -85,4 +77,32 @@ impl Membership {
     pub fn get_discount_value(&self) -> Decimal128 {
         self.discount_percentage
     }
+}
+
+#[tarpc::service]
+pub trait MembershipService {
+    async fn create_membership(membership: Membership) -> Result<Membership, String>;
+    async fn get_membership(id: String) -> Result<Membership, String>;
+    async fn update_membership(membership: Membership) -> Result<Membership, String>;
+    async fn delete_membership(id: String) -> Result<(), String>;
+    async fn list_memberships(shop_id: String) -> Result<Vec<Membership>, String>;
+    async fn apply_membership_discount(
+        membership_id: String,
+        cart_total: Decimal128,
+    ) -> Result<Decimal128, String>;
+    async fn validate_membership(membership_id: String) -> Result<bool, String>;
+    async fn get_membership_by_customer_id(customer_id: String) -> Result<Membership, String>;
+    async fn get_membership_by_customer_id_and_shop(
+        customer_id: String,
+        shop_id: String,
+    ) -> Result<Membership, String>;
+    async fn get_membership_by_tier(tier: MembershipTier) -> Result<Membership, String>;
+    async fn get_membership_by_tier_and_shop(
+        tier: MembershipTier,
+        shop_id: String,
+    ) -> Result<Membership, String>;
+    async fn get_membership_by_tier_and_customer(
+        tier: MembershipTier,
+        customer_id: String,
+    ) -> Result<Membership, String>;
 }

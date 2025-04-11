@@ -240,3 +240,21 @@ pub fn compare_i32(a: i32, b: i32, op: &Operator) -> bool {
         _ => false,
     }
 }
+#[tarpc::service]
+pub trait DiscountService {
+    async fn create_discount_rule(rule: DiscountRule) -> Result<DiscountRule, String>;
+    async fn get_discount_rule(id: String) -> Result<DiscountRule, String>;
+    async fn update_discount_rule(rule: DiscountRule) -> Result<DiscountRule, String>;
+    async fn delete_discount_rule(id: String) -> Result<(), String>;
+    async fn list_discount_rules(shop_id: String) -> Result<Vec<DiscountRule>, String>;
+    async fn apply_discount_rule(
+        rule_id: String,
+        cart_total: Decimal128,
+    ) -> Result<Decimal128, String>;
+    async fn validate_discount_rule(rule_id: String) -> Result<bool, String>;
+    async fn get_discount_rule_by_code(rule_code: String) -> Result<DiscountRule, String>;
+    async fn get_discount_rule_by_code_and_shop(
+        rule_code: String,
+        shop_id: String,
+    ) -> Result<DiscountRule, String>;
+}
